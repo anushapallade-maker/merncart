@@ -1,22 +1,23 @@
 // server.js
-// This is the very first file our "shopkeeper" (backend) runs.
+require("dotenv").config();
 
-const express = require("express"); // bring in the Express library
-const cors = require("cors");       // allows our future React app to talk to this server
+const express = require("express");
+const cors = require("cors");
+const connectDB = require("./config/db");
 
-const app = express(); // create the actual server application
+const app = express();
 
-app.use(cors());          // turn on CORS so browsers don't block requests
-app.use(express.json());  // allows server to understand JSON data sent to it
+connectDB();
 
-const PORT = 5000; // the "door number" our shop will be reachable at
+app.use(cors());
+app.use(express.json());
 
-// When someone visits the homepage of our API, send back this message
+const PORT = process.env.PORT || 5000;
+
 app.get("/", (req, res) => {
   res.send("API is running");
 });
 
-// Start the server and make it listen for requests
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

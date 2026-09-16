@@ -54,4 +54,50 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+
+
+const jwt = require("jsonwebtoken"); // add this to your requires at the top
+
+// @route   POST /api/auth/login
+// @desc    Log in an existing user and return a JWT token
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // 1. Basic check
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please provide email and password" });
+    }
+
+    // 2. Find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Deliberately vague message — don't reveal whether email or password was wrong
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    // 3. Compare the submitted password with the stored hashed password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    // 4. Create the JWT token ("wristband")
+    const token = jwt.sign(
+      { id: user._id, role: user.role }, // data stored inside the token
+      process.env.JWT_SECRET,            // secret key used to sign it (kept in .env)
+      { expiresIn: "7d" }                // token becomes invalid after 7 days
+    );
+
+    // 5. Send the token back to the client
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
 module.exports = router;
